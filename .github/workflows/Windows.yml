@@ -1,0 +1,19 @@
+name: Windows
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: compnerd/gha-setup-swift@main
+        with:
+          branch: swift-5.6.1-release
+          tag: 5.6.1-RELEASE
+
+      - uses: actions/checkout@v2
+      - run: swift build
