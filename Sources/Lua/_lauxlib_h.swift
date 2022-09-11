@@ -334,7 +334,7 @@ public extension Lua {
     @inlinable
     static func newState() -> Lua? {
         if let state = luaL_newstate() {
-            return Lua(state)
+            return Lua(managedState: state)
         }
         return nil
     }

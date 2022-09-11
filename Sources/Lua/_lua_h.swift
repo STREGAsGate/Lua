@@ -154,7 +154,7 @@ public extension Lua {
     @inlinable
     func newThread() -> Lua? {
         if let state = lua_newthread(state) {
-            return Lua(state)
+            return Lua(managedState: state)
         }
         return nil
     }
@@ -380,7 +380,7 @@ public extension Lua {
     @inlinable
     func toThread(at idx: Int32) -> Lua? {
         guard let threadState = lua_tothread(state, idx) else {return nil}
-        return Lua(threadState)
+        return Lua(existingState: threadState)
     }
     
     /**
