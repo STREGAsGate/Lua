@@ -44,5 +44,8 @@ public class Lua {
     }
 }
 
+extension Lua: Equatable {
+    public static func ==(lhs: Lua, rhs: Lua) -> Bool {
+        return lhs.state == rhs.state
     }
 }
