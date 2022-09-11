@@ -539,7 +539,7 @@ public extension Lua {
  */
 public extension Lua {
     /// Pushes onto the stack the value of the global name. Returns the type of that value.
-    @inlinable
+    @inlinable @discardableResult
     func getGlobal(named name: String) -> BasicType {
         return name.withCString { cString in
             return BasicType(rawValue: lua_getglobal(state, cString))!
@@ -553,7 +553,7 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable
+    @inlinable @discardableResult
     func getTable(at idx: Int32) -> BasicType {
         return BasicType(rawValue: lua_gettable(state, idx))!
     }
@@ -563,7 +563,7 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable
+    @inlinable @discardableResult
     func getField(at idx: Int32, _ k: String) -> BasicType {
         return k.withCString { cString in
             return BasicType(rawValue: lua_getfield(state, idx, cString))!
@@ -575,13 +575,13 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable
+    @inlinable @discardableResult
     func getI(at idx: Int32, number n: Integer) -> BasicType {
         return BasicType(rawValue: lua_geti(state, idx, n))!
     }
     
     /// Similar to lua_gettable, but does a raw access (i.e., without metamethods).
-    @inlinable
+    @inlinable @discardableResult
     func rawGet(at idx: Int32) -> BasicType {
         return BasicType(rawValue: lua_rawget(state, idx))!
     }
@@ -591,7 +591,7 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable
+    @inlinable @discardableResult
     func rawGetI(at idx: Int32, number n: Integer) -> BasicType {
         return BasicType(rawValue: lua_rawgeti(state, idx, n))!
     }
@@ -601,7 +601,7 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable
+    @inlinable @discardableResult
     func rawGetI(at idx: Int32, pointer p: UnsafeRawPointer) -> BasicType {
         return BasicType(rawValue: lua_rawgetp(state, idx, p))!
     }
@@ -635,7 +635,7 @@ public extension Lua {
      
      If the userdata does not have that value, pushes nil and returns LUA_TNONE.
      */
-    @inlinable
+    @inlinable @discardableResult
     func getIUserValue(at idx: Int32, _ n: Int32) -> BasicType {
         return BasicType(rawValue: lua_getiuservalue(state, idx, n))!
     }
