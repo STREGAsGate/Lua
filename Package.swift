@@ -6,6 +6,8 @@ import PackageDescription
 var cSettings: [CSetting] {
     var array: [CSetting] = []
     
+    array.append(.define("LUA_USE_APICHECK", .when(configuration: .debug)))
+    
     // Windows
     array.append(.define("LUA_USE_WINDOWS", .when(platforms: [.windows])))
     
