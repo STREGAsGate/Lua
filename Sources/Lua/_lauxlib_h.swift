@@ -507,11 +507,12 @@ public extension Lua {
      It returns 0 if there are no errors or 1 in case of errors.
      */
     @inlinable
-    func doFile(_ fn: String?) -> Bool {
-        if loadFile(fn) == .ok {
-            return pcall(0, Lua.multipleReturns, 0) == .ok
+    func doFile(_ fn: String?) -> ThreadStatus {
+        let r = loadFile(fn)
+        if r == .ok {
+            return pcall(0, Lua.multipleReturns, 0)
         }
-        return false
+        return r
     }
     
     /**
@@ -521,11 +522,12 @@ public extension Lua {
      It returns 0 if there are no errors or 1 in case of errors.
      */
     @inlinable
-    func doString(_ s: String) -> Bool {
-        if loadString(s) == .ok {
-            return pcall(0, Lua.multipleReturns, 0) == .ok
+    func doString(_ s: String) -> ThreadStatus {
+        let r = loadString(s)
+        if r == .ok {
+            return pcall(0, Lua.multipleReturns, 0)
         }
-        return false
+        return r
     }
     
     /// Pushes onto the stack the metatable associated with name tname in the registry (see luaL_newmetatable).
