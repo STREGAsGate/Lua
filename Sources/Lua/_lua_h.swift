@@ -343,7 +343,7 @@ public extension Lua {
      - note: lua_tolstring returns a pointer to a string inside the Lua state (see §4.1.3). This string always has a zero ('\0') after its last character (as in C), but can contain other zeros in its body.
      */
     @inlinable
-    func toLString(at idx: Int32) -> String? {
+    func toString(at idx: Int32) -> String? {
         var len: Int = 0
         guard let cString = lua_tolstring(state, idx, &len) else {return nil}
         guard len > 0 else {return nil}
