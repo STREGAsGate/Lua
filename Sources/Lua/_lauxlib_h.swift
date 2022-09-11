@@ -313,10 +313,12 @@ public extension Lua {
     }
     
     /**
-     Loads and runs the given string. It is defined as the following macro:
+     Similar to load, but gets the chunk from the given string.
 
-          (luaL_loadstring(L, str) || lua_pcall(L, 0, LUA_MULTRET, 0))
-     It returns LUA_OK if there are no errors, or an error code in case of errors (see §4.4.1).
+     To load and run a given string, use the idiom
+
+          assert(loadstring(s))()
+     When absent, chunkname defaults to the given string.
      */
     @inlinable
     func loadString(_ s: String) -> ThreadStatus {
@@ -497,8 +499,10 @@ public extension Lua {
     }
     
     /**
-     Loads and runs the given file. It is defined as the following macro:
-
+     Loads and runs the given file.
+     
+     It is defined as the following macro:
+     
           (luaL_loadfile(L, filename) || lua_pcall(L, 0, LUA_MULTRET, 0))
      It returns 0 if there are no errors or 1 in case of errors.
      */
