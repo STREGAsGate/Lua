@@ -3,6 +3,11 @@
 
 import PackageDescription
 
+let libraryType: Product.Library.LibraryType? = nil
+#if os(Windows)
+libraryType = .dynamic
+#endif
+
 var cSettings: [CSetting] {
     var array: [CSetting] = []
     
@@ -44,7 +49,7 @@ var exclude: [String] {
 let package = Package(
     name: "Lua",
     products: [
-        .library(name: "Lua", targets: ["Lua"]),
+        .library(name: "Lua", type: libraryType, targets: ["Lua"]),
     ],
     targets: [
         .target(name: "Lua", dependencies: ["_LuaC"]),
