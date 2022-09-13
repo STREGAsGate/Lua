@@ -13,8 +13,12 @@ cLanguageStandard = .c89
 var cSettings: [CSetting] {
     var array: [CSetting] = []
     
+    array.append(.define("LUA_COMPAT_5_3"))
     array.append(.define("LUA_USE_APICHECK", .when(configuration: .debug)))
   
+    // Windows
+    array.append(.define("LUA_BUILD_AS_DLL", .when(platforms: [.windows])))
+
     // Linux
     array.append(.define("LUA_USE_LINUX", .when(platforms: [.linux])))
     
