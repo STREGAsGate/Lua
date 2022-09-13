@@ -4,18 +4,17 @@
 import PackageDescription
 
 var libraryType: Product.Library.LibraryType? = nil
+var cLanguageStandard: CLanguageStandard = .gnu99
 #if os(Windows)
 libraryType = .dynamic
+cLanguageStandard = .c89
 #endif
 
 var cSettings: [CSetting] {
     var array: [CSetting] = []
     
     array.append(.define("LUA_USE_APICHECK", .when(configuration: .debug)))
-    
-    // Windows
-    array.append(.define("LUA_USE_WINDOWS", .when(platforms: [.windows])))
-    
+  
     // Linux
     array.append(.define("LUA_USE_LINUX", .when(platforms: [.linux])))
     
@@ -59,5 +58,5 @@ let package = Package(
                 publicHeadersPath: "Include",
                 cSettings: cSettings),
     ],
-    cLanguageStandard: .gnu99
+    cLanguageStandard: cLanguageStandard
 )
