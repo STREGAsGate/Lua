@@ -39,7 +39,7 @@ public extension Lua {
  */
 public extension Lua {
     @inline(__always)
-    static var registryIndex: Int32 {-LUAI_MAXSTACK - 1000}
+    static let registryIndex = -LUAI_MAXSTACK - 1000
     
     /// Returns the pseudo-index that represents the i-th upvalue of the running function (see §4.2). i must be in the range [1,256].
     @inline(__always)
