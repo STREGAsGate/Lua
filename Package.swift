@@ -4,10 +4,8 @@
 import PackageDescription
 
 var libraryType: Product.Library.LibraryType? = nil
-var cLanguageStandard: CLanguageStandard = .gnu99
 #if os(Windows)
 libraryType = .dynamic
-cLanguageStandard = .c89
 #endif
 
 var cSettings: [CSetting] {
@@ -62,5 +60,5 @@ let package = Package(
                 publicHeadersPath: "Include",
                 cSettings: cSettings),
     ],
-    cLanguageStandard: cLanguageStandard
+    cLanguageStandard: .gnu99
 )
