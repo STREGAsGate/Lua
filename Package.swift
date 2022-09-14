@@ -22,6 +22,7 @@ var cSettings: [CSetting] {
     
     // macOS
     array.append(.define("LUA_USE_MACOSX", .when(platforms: [.macOS])))
+    array.append(.define("LUA_USE_READLINE", .when(platforms: [.macOS])))
     
     return array
 }
