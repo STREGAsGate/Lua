@@ -6,11 +6,11 @@
  * http://stregasgate.com
  */
 
-import _LuaC
+import LuaC
 
 public extension Lua {
     /// Opens all standard Lua libraries into the given state.
-    @inlinable
+    @inline(__always)
     func openlibs() {
         luaL_openlibs(state)
     }

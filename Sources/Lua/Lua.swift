@@ -6,10 +6,12 @@
  * http://stregasgate.com
  */
 
-import _LuaC
+import LuaC
 
-public class Lua {
+public final class Lua {
     @usableFromInline let state: OpaquePointer
+    public private(set) lazy var stack: Stack = Stack(lua: self)
+
     private let managed: Bool
     /**
      - description: Creates a new Lua state. It calls lua_newstate with an allocator based on the standard C allocation functions and then sets a warning function and a panic function (see §4.4) that print messages to the standard error output.
@@ -28,13 +30,13 @@ public class Lua {
     @usableFromInline
     internal init(managedState state: OpaquePointer) {
         self.state = state
-        managed = true
+        self.managed = true
     }
     
     /// Use this in CFunctions to gain access `let lua = Lua(state)`
     public init(existingState state: OpaquePointer) {
         self.state = state
-        managed = false
+        self.managed = false
     }
     
     deinit {
@@ -44,8 +46,47 @@ public class Lua {
     }
 }
 
+extension Lua {
+    public struct Stack {
+        let lua: Lua
+        
+
+    }
+}
+
+public extension Lua.Stack {
+    var top: Int32 {
+        get {
+            return lua_gettop(lua.state)
+        }
+        set {
+            lua_settop(lua.state, newValue)
+        }
+    }
+    
+}
+
+extension Lua.Stack: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        var string: String = "Lua Stack (\(top)):"
+        if top > 0 {
+            for index in (1 ... top).reversed() {
+                let type = lua.type(at: index)
+                string += "\n          \(index)\t\(type)"
+            }
+        }
+        return string
+    }
+}
+
 extension Lua: Equatable {
     public static func ==(lhs: Lua, rhs: Lua) -> Bool {
         return lhs.state == rhs.state
+    }
+}
+
+extension Lua: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(state)
     }
 }

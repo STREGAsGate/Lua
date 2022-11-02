@@ -6,7 +6,7 @@
  * http://stregasgate.com
  */
 
-import _LuaC
+import LuaC
 
 public extension Lua {
     @inline(__always)
@@ -39,7 +39,7 @@ public extension Lua {
  */
 public extension Lua {
     @inline(__always)
-    static let registryIndex = -LUAI_MAXSTACK - 1000
+    static let registryIndex: Int32 = -LUAI_MAXSTACK - 1000
     
     /// Returns the pseudo-index that represents the i-th upvalue of the running function (see §4.2). i must be in the range [1,256].
     @inline(__always)
@@ -141,7 +141,7 @@ public extension Lua {
      
      - note: On several platforms, you may not need to call this function, because all resources are naturally released when the host program ends. On the other hand, long-running programs that create multiple states, such as daemons or web servers, will probably need to close states as soon as they are not needed.
      */
-    @inlinable
+    @inline(__always)
     func close() {
         lua_close(state)
     }
@@ -151,7 +151,7 @@ public extension Lua {
      
      - note: Threads are subject to garbage collection, like any Lua object.
      */
-    @inlinable
+    @inline(__always)
     func newThread() -> Lua? {
         if let state = lua_newthread(state) {
             return Lua(managedState: state)
@@ -162,7 +162,7 @@ public extension Lua {
     /**
      Resets a thread, cleaning its call stack and closing all pending to-be-closed variables. Returns a status code: LUA_OK for no errors in the thread (either the original error that stopped the thread or errors in closing methods), or an error status otherwise. In case of error, leaves the error object on the top of the stack.
      */
-    @inlinable
+    @inline(__always)
     func reset() -> ThreadStatus {
         if let status = ThreadStatus(rawValue: lua_resetthread(state)) {
             return status
@@ -171,13 +171,13 @@ public extension Lua {
     }
     
     /// Sets a new panic function and returns the old one (see §4.4).
-    @inlinable
+    @inline(__always)
     func atPanic(_ panicf: CFunction!) -> CFunction! {
         return lua_atpanic(state, panicf)
     }
     
     /// Returns the version number of this core.
-    @inlinable
+    @inline(__always)
     var version: Number {lua_version(state)}
 }
 /*
@@ -185,13 +185,13 @@ public extension Lua {
  */
 public extension Lua {
     /// Converts the acceptable index idx into an equivalent absolute index (that is, one that does not depend on the stack size).
-    @inlinable
+    @inline(__always)
     func absIndex(_ idx: Int32) -> Int32 {
         return lua_absindex(state, idx)
     }
     
     /// Returns the index of the top element in the stack. Because indices start at 1, this result is equal to the number of elements in the stack; in particular, 0 means an empty stack.
-    @inlinable
+    @inline(__always)
     func getTop() -> Int32 {
         return lua_gettop(state)
     }
@@ -201,13 +201,13 @@ public extension Lua {
      
      - note: This function can run arbitrary code when removing an index marked as to-be-closed from the stack.
      */
-    @inlinable
+    @inline(__always)
     func setTop(_ idx: Int32) {
         lua_settop(state, idx)
     }
     
     /// Pushes a copy of the element at the given index onto the stack.
-    @inlinable
+    @inline(__always)
     func pushValue(_ idx: Int32) {
         lua_pushvalue(state, idx)
     }
@@ -215,13 +215,13 @@ public extension Lua {
     /**
      Rotates the stack elements between the valid index idx and the top of the stack. The elements are rotated n positions in the direction of the top, for a positive n, or -n positions in the direction of the bottom, for a negative n. The absolute value of n must not be greater than the size of the slice being rotated. This function cannot be called with a pseudo-index, because a pseudo-index is not an actual stack position.
      */
-    @inlinable
+    @inline(__always)
     func rotate(idx: Int32, by n: Int32) {
         lua_rotate(state, idx, n)
     }
     
     /// Copies the element at index fromidx into the valid index toidx, replacing the value at that position. Values at other positions are not affected.
-    @inlinable
+    @inline(__always)
     func copy(from fromidx: Int32, to toidx: Int32) {
         lua_copy(state, fromidx, toidx)
     }
@@ -229,7 +229,7 @@ public extension Lua {
     /**
      Ensures that the stack has space for at least n extra elements, that is, that you can safely push up to n values into it. It returns false if it cannot fulfill the request, either because it would cause the stack to be greater than a fixed maximum size (typically at least several thousand elements) or because it cannot allocate memory for the extra space. This function never shrinks the stack; if the stack already has space for the extra elements, it is left unchanged.
      */
-    @inlinable
+    @inline(__always)
     func checkStack(count n: Int32) -> Bool {
         return lua_checkstack(state, n) != 0
     }
@@ -239,7 +239,7 @@ public extension Lua {
      
      - note: This function pops n values from the stack from, and pushes them onto the stack to.
      */
-    @inlinable
+    @inline(__always)
     func xMove(from: Lua, to: Lua, count n: Int32) {
         lua_xmove(from.state, to.state, n)
     }
@@ -250,31 +250,31 @@ public extension Lua {
  */
 public extension Lua {
     /// Returns 1 if the value at the given index is a number or a string convertible to a number, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isNumber(at idx: Int32) -> Bool {
         return lua_isnumber(state, idx) != 0
     }
     
     /// Returns 1 if the value at the given index is a string or a number (which is always convertible to a string), and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isString(at idx: Int32) -> Bool {
         return lua_isstring(state, idx) != 0
     }
     
     /// Returns 1 if the value at the given index is a C function, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isCFunction(at idx: Int32) -> Bool {
         return lua_iscfunction(state, idx) != 0
     }
     
     /// Returns 1 if the value at the given index is an integer (that is, the value is a number and is represented as an integer), and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isInteger(at idx: Int32) -> Bool {
         return lua_isinteger(state, idx) != 0
     }
     
     /// Returns 1 if the value at the given index is a userdata (either full or light), and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isUserData(at idx: Int32) -> Bool {
         return lua_isuserdata(state, idx) != 0
     }
@@ -282,7 +282,7 @@ public extension Lua {
     /**
      Returns the type of the value in the given valid index, or LUA_TNONE for a non-valid but acceptable index. The types returned by lua_type are coded by the following constants defined in lua.h: LUA_TNIL, LUA_TNUMBER, LUA_TBOOLEAN, LUA_TSTRING, LUA_TTABLE, LUA_TFUNCTION, LUA_TUSERDATA, LUA_TTHREAD, and LUA_TLIGHTUSERDATA.
      */
-    @inlinable
+    @inline(__always)
     func type(at idx: Int32) -> BasicType {
         if let basicType = BasicType(rawValue: lua_type(state, idx)) {
             return basicType
@@ -291,7 +291,7 @@ public extension Lua {
     }
     
     /// Returns the name of the type encoded by the value tp, which must be one the values returned by lua_type.
-    @inlinable
+    @inline(__always)
     func typeName(_ tp: BasicType) -> String {
         guard let cString = lua_typename(state, tp.rawValue) else {return "Unknown"}
         return String(cString: cString)
@@ -304,7 +304,7 @@ public extension Lua {
      
      - note: If isnum is not NULL, its referent is assigned a boolean value that indicates whether the operation succeeded.
      */
-    @inlinable
+    @inline(__always)
     func toNumber(at idx: Int32) -> Number? {
         var v: Int32 = 0
         let number = lua_tonumberx(state, idx, &v)
@@ -319,7 +319,7 @@ public extension Lua {
      
      - note: If isnum is not NULL, its referent is assigned a boolean value that indicates whether the operation succeeded.
      */
-    @inlinable
+    @inline(__always)
     func toInteger(at idx: Int32) -> Integer? {
         var v: Int32 = 0
         let integer = lua_tointegerx(state, idx, &v)
@@ -332,7 +332,7 @@ public extension Lua {
     /**
      Converts the Lua value at the given index to a C boolean value (0 or 1). Like all tests in Lua, lua_toboolean returns true for any Lua value different from false and nil; otherwise it returns false. (If you want to accept only actual boolean values, use lua_isboolean to test the value's type.)
      */
-    @inlinable
+    @inline(__always)
     func toBoolean(at idx: Int32) -> Bool {
         return lua_toboolean(state, idx) != 0
     }
@@ -342,7 +342,7 @@ public extension Lua {
      
      - note: lua_tolstring returns a pointer to a string inside the Lua state (see §4.1.3). This string always has a zero ('\0') after its last character (as in C), but can contain other zeros in its body.
      */
-    @inlinable
+    @inline(__always)
     func toString(at idx: Int32) -> String? {
         var len: Int = 0
         guard let cString = lua_tolstring(state, idx, &len) else {return nil}
@@ -353,7 +353,7 @@ public extension Lua {
     /**
      Returns the raw "length" of the value at the given index: for strings, this is the string length; for tables, this is the result of the length operator ('#') with no metamethods; for userdata, this is the size of the block of memory allocated for the userdata. For other values, this call returns 0.
      */
-    @inlinable
+    @inline(__always)
     func rawLen(at idx: Int32) -> UnsignedInteger {
         return lua_rawlen(state, idx)
     }
@@ -361,7 +361,7 @@ public extension Lua {
     /**
      Converts a value at the given index to a C function. That value must be a C function; otherwise, returns NULL.
      */
-    @inlinable
+    @inline(__always)
     func toCFunction(at idx: Int32) -> CFunction? {
         return lua_tocfunction(state, idx)
     }
@@ -369,7 +369,7 @@ public extension Lua {
     /**
      If the value at the given index is a full userdata, returns its memory-block address. If the value is a light userdata, returns its value (a pointer). Otherwise, returns NULL.
      */
-    @inlinable
+    @inline(__always)
     func toUserData(at idx: Int32) -> UnsafeMutableRawPointer? {
         return lua_touserdata(state, idx)
     }
@@ -377,7 +377,7 @@ public extension Lua {
     /**
      Converts the value at the given index to a Lua thread (represented as lua_State*). This value must be a thread; otherwise, the function returns NULL.
      */
-    @inlinable
+    @inline(__always)
     func toThread(at idx: Int32) -> Lua? {
         guard let threadState = lua_tothread(state, idx) else {return nil}
         return Lua(existingState: threadState)
@@ -388,7 +388,7 @@ public extension Lua {
      
      - note: Typically this function is used only for hashing and debug information.
      */
-    @inlinable
+    @inline(__always)
     func toPointer(at idx: Int32) -> UnsafeRawPointer? {
         return lua_topointer(state, idx)
     }
@@ -432,7 +432,7 @@ public extension Lua {
     /**
      Performs an arithmetic or bitwise operation over the two values (or one, in the case of negations) at the top of the stack, with the value on the top being the second operand, pops these values, and pushes the result of the operation. The function follows the semantics of the corresponding Lua operator (that is, it may call metamethods).
      */
-    @inlinable
+    @inline(__always)
     func arith(_ op: Operator) {
         lua_arith(state, op.rawValue)
     }
@@ -447,7 +447,7 @@ public extension Lua {
     }
     
     /// Returns 1 if the two values in indices index1 and index2 are primitively equal (that is, equal without calling the __eq metamethod). Otherwise returns 0. Also returns 0 if any of the indices are not valid.
-    @inlinable
+    @inline(__always)
     func rawEqual(lhs idx1: Int32, rhs idx2: Int32) -> Bool {
         return lua_rawequal(state, idx1, idx2) != 0
     }
@@ -455,7 +455,7 @@ public extension Lua {
     /**
      Compares two Lua values. Returns 1 if the value at index index1 satisfies op when compared with the value at index index2, following the semantics of the corresponding Lua operator (that is, it may call metamethods). Otherwise returns 0. Also returns 0 if any of the indices is not valid.
      */
-    @inlinable
+    @inline(__always)
     func compare(lhs idx1: Int32, rhs idx2: Int32, comparison op: Comparison) -> Bool {
         return lua_compare(state, idx1, idx2, op.rawValue) != 0
     }
@@ -466,19 +466,19 @@ public extension Lua {
  */
 public extension Lua {
     /// Pushes a nil value onto the stack.
-    @inlinable
+    @inline(__always)
     func pushNil() {
         lua_pushnil(state)
     }
     
     /// Pushes a float with value n onto the stack.
-    @inlinable
+    @inline(__always)
     func pushNumber(_ n: Number) {
         lua_pushnumber(state, n)
     }
     
     /// Pushes an integer with value n onto the stack.
-    @inlinable
+    @inline(__always)
     func pushInteger(_ n: Integer) {
         lua_pushinteger(state, n)
     }
@@ -488,7 +488,7 @@ public extension Lua {
      
      - returns: Returns a pointer to the internal copy of the string (see §4.1.3).
      */
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func pushString(_ s: String) -> UnsafePointer<CChar> {
         return s.withCString { cString in
             return lua_pushstring(state, cString)
@@ -506,13 +506,13 @@ public extension Lua {
      
      When n is zero, this function creates a light C function, which is just a pointer to the C function. In that case, it never raises a memory error.
      */
-    @inlinable
+    @inline(__always)
     func pushCClosure(_ fn: @escaping CFunction, _ n: Int32) {
         lua_pushcclosure(state, fn, n)
     }
     
     /// Pushes a boolean value with value b onto the stack.
-    @inlinable
+    @inline(__always)
     func pushBoolean(_ b: Bool) {
         lua_pushboolean(state, b ? 1 : 0)
     }
@@ -522,13 +522,13 @@ public extension Lua {
      
      Userdata represent C values in Lua. A light userdata represents a pointer, a void*. It is a value (like a number): you do not create it, it has no individual metatable, and it is not collected (as it was never created). A light userdata is equal to "any" light userdata with the same C address.
      */
-    @inlinable
+    @inline(__always)
     func pushLightUserData(_ p: UnsafeMutableRawPointer) {
         lua_pushlightuserdata(state, p)
     }
     
     /// Pushes the thread represented by L onto the stack. Returns 1 if this thread is the main thread of its state.
-    @inlinable
+    @inline(__always)
     func pushThread(_ l: Lua) -> Bool {
         return lua_pushthread(l.state) != 0
     }
@@ -539,7 +539,7 @@ public extension Lua {
  */
 public extension Lua {
     /// Pushes onto the stack the value of the global name. Returns the type of that value.
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func getGlobal(named name: String) -> BasicType {
         return name.withCString { cString in
             return BasicType(rawValue: lua_getglobal(state, cString))!
@@ -553,7 +553,7 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func getTable(at idx: Int32) -> BasicType {
         return BasicType(rawValue: lua_gettable(state, idx))!
     }
@@ -563,7 +563,7 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func getField(at idx: Int32, _ k: String) -> BasicType {
         return k.withCString { cString in
             return BasicType(rawValue: lua_getfield(state, idx, cString))!
@@ -575,13 +575,13 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func getI(at idx: Int32, number n: Integer) -> BasicType {
         return BasicType(rawValue: lua_geti(state, idx, n))!
     }
     
     /// Similar to lua_gettable, but does a raw access (i.e., without metamethods).
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func rawGet(at idx: Int32) -> BasicType {
         return BasicType(rawValue: lua_rawget(state, idx))!
     }
@@ -591,7 +591,7 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func rawGetI(at idx: Int32, number n: Integer) -> BasicType {
         return BasicType(rawValue: lua_rawgeti(state, idx, n))!
     }
@@ -601,7 +601,7 @@ public extension Lua {
      
      - returns: Returns the type of the pushed value.
      */
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func rawGetI(at idx: Int32, pointer p: UnsafeRawPointer) -> BasicType {
         return BasicType(rawValue: lua_rawgetp(state, idx, p))!
     }
@@ -609,7 +609,7 @@ public extension Lua {
     /**
      Creates a new empty table and pushes it onto the stack. Parameter narr is a hint for how many elements the table will have as a sequence; parameter nrec is a hint for how many other elements the table will have. Lua may use these hints to preallocate memory for the new table. This preallocation may help performance when you know in advance how many elements the table will have. Otherwise you can use the function lua_newtable.
      */
-    @inlinable
+    @inline(__always)
     func createTable(_ narr: Int32, _ nrec: Int32) {
         lua_createtable(state, narr, nrec)
     }
@@ -619,13 +619,13 @@ public extension Lua {
      
      - returns: The function returns the address of the block of memory. Lua ensures that this address is valid as long as the corresponding userdata is alive (see §2.5). Moreover, if the userdata is marked for finalization (see §2.5.3), its address is valid at least until the call to its finalizer.
      */
-    @inlinable
+    @inline(__always)
     func newUserDataUV(_ sz: Int, nuvalue: Int32) -> UnsafeMutableRawPointer {
         return lua_newuserdatauv(state, sz, nuvalue)
     }
     
     /// If the value at the given index has a metatable, the function pushes that metatable onto the stack and returns 1. Otherwise, the function returns 0 and pushes nothing on the stack.
-    @inlinable
+    @inline(__always)
     func getMetaTable(_ objindex: Int32) -> Bool {
         return lua_getmetatable(state, objindex) != 0
     }
@@ -635,7 +635,7 @@ public extension Lua {
      
      If the userdata does not have that value, pushes nil and returns LUA_TNONE.
      */
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func getIUserValue(at idx: Int32, _ n: Int32) -> BasicType {
         return BasicType(rawValue: lua_getiuservalue(state, idx, n))!
     }
@@ -646,7 +646,7 @@ public extension Lua {
  */
 public extension Lua {
     /// Pops a value from the stack and sets it as the new value of global name.
-    @inlinable
+    @inline(__always)
     func setGloabal(named name: String) {
         name.withCString { cString in
             lua_setglobal(state, cString)
@@ -658,7 +658,7 @@ public extension Lua {
      
      This function pops both the key and the value from the stack. As in Lua, this function may trigger a metamethod for the "newindex" event (see §2.4).
      */
-    @inlinable
+    @inline(__always)
     func setTable(at idx: Int32) {
         lua_settable(state, idx)
     }
@@ -668,7 +668,7 @@ public extension Lua {
      
      This function pops the value from the stack. As in Lua, this function may trigger a metamethod for the "newindex" event (see §2.4).
      */
-    @inlinable
+    @inline(__always)
     func setField(at idx: Int32, _ k: String) {
         k.withCString { cString in
             lua_setfield(state, idx, cString)
@@ -680,13 +680,13 @@ public extension Lua {
      
      This function pops the value from the stack. As in Lua, this function may trigger a metamethod for the "newindex" event (see §2.4).
      */
-    @inlinable
+    @inline(__always)
     func setI(at idx: Int32, number n: Integer) {
         lua_seti(state, idx, n)
     }
     
     /// Similar to lua_settable, but does a raw assignment (i.e., without metamethods).
-    @inlinable
+    @inline(__always)
     func rawSet(at idx: Int32) {
         lua_rawset(state, idx)
     }
@@ -696,7 +696,7 @@ public extension Lua {
      
      This function pops the value from the stack. The assignment is raw, that is, it does not use the __newindex metavalue.
      */
-    @inlinable
+    @inline(__always)
     func rawSetI(at idx: Int32, number n: Integer) {
         lua_rawseti(state, idx, n)
     }
@@ -706,7 +706,7 @@ public extension Lua {
      
      This function pops the value from the stack. The assignment is raw, that is, it does not use the __newindex metavalue.
      */
-    @inlinable
+    @inline(__always)
     func rawSetP(at idx: Int32, pointer p: UnsafeRawPointer) {
         lua_rawsetp(state, idx, p)
     }
@@ -716,13 +716,13 @@ public extension Lua {
      
      (For historical reasons, this function returns an int, which now is always 1.)
      */
-    @inlinable @discardableResult
+    @inline(__always) @discardableResult
     func setMetaTable(_ objindex: Int32) -> Int32 {
         return lua_setmetatable(state, objindex)
     }
     
     /// Pops a value from the stack and sets it as the new n-th user value associated to the full userdata at the given index. Returns 0 if the userdata does not have that value.
-    @inlinable
+    @inline(__always)
     func setIUserValue(at idx: Int32, _ n: Int32) -> Bool {
         return lua_setiuservalue(state, idx, n) != 0
     }
@@ -735,7 +735,7 @@ public extension Lua {
 public extension Lua {
     
     /// This function behaves exactly like lua_call, but allows the called function to yield (see §4.5).
-    @inlinable
+    @inline(__always)
     func callk(_ nargs: Int32, _ nresults: Int32, _ ctx: lua_KContext, _ k: KFunction?) {
         lua_callk(state, nargs, nresults, ctx, k)
     }
@@ -762,13 +762,13 @@ public extension Lua {
      lua_setglobal(L, "a");                         /* set global 'a' */
      Note that the code above is balanced: at its end, the stack is back to its original configuration. This is considered good programming practice.
      */
-    @inlinable
+    @inline(__always)
     func call(_ nargs: Int32, _ nresults: Int32) {
         callk(nargs, nresults, 0, nil)
     }
     
     /// This function behaves exactly like lua_pcall, except that it allows the called function to yield (see §4.5).
-    @inlinable
+    @inline(__always)
     func pcallk(_ nargs: Int32, _ nresults: Int32, _ errfunc: Int32, _ ctx: lua_KContext, _ k: lua_KFunction?) -> ThreadStatus {
         return ThreadStatus(rawValue: lua_pcallk(state, nargs, nresults, errfunc, ctx, k))!
     }
@@ -784,7 +784,7 @@ public extension Lua {
      
      The lua_pcall function returns one of the following status codes: LUA_OK, LUA_ERRRUN, LUA_ERRMEM, or LUA_ERRERR.
      */
-    @inlinable
+    @inline(__always)
     func pcall(_ nargs: Int32, _ nresults: Int32, _ errfunc: Int32) -> ThreadStatus {
         return pcallk(nargs, nresults, errfunc, 0, nil)
     }
@@ -804,7 +804,7 @@ public extension Lua {
      
      If the resulting function has upvalues, its first upvalue is set to the value of the global environment stored at index LUA_RIDX_GLOBALS in the registry (see §4.3). When loading main chunks, this upvalue will be the _ENV variable (see §2.2). Other upvalues are initialized with nil.
      */
-    @inlinable
+    @inline(__always)
     func load(_ reader: @escaping Reader, _ dt: UnsafeMutableRawPointer!, _ chunkname: UnsafePointer<CChar>!, _ mode: UnsafePointer<CChar>!) -> ThreadStatus {
         let status = lua_load(state, reader, dt, chunkname, mode)
         return ThreadStatus(rawValue: status)!
@@ -819,7 +819,7 @@ public extension Lua {
      
      This function does not pop the Lua function from the stack.
      */
-    @inlinable
+    @inline(__always)
     func dump(_ writer: @escaping Writer, _ data: UnsafeMutableRawPointer!, _ strip: Int32) -> ThreadStatus {
         let status = lua_dump(state, writer, data, strip)
         return ThreadStatus(rawValue: status)!
@@ -841,7 +841,7 @@ public extension Lua {
      
      This function can raise an error if it is called from a thread with a pending C call with no continuation function (what is called a C-call boundary), or it is called from a thread that is not running inside a resume (typically the main thread).
      */
-    @inlinable
+    @inline(__always)
     func yieldk(_ nresults: Int32, _ ctx: KContext, _ k: KFunction?) -> ThreadStatus {
         let status = lua_yieldk(state, nresults, ctx, k)
         return ThreadStatus(rawValue: status)!
@@ -850,7 +850,7 @@ public extension Lua {
     /**
      This function is equivalent to lua_yieldk, but it has no continuation (see §4.5). Therefore, when the thread resumes, it continues the function that called the function calling lua_yield. To avoid surprises, this function should be called only in a tail call.
      */
-    @inlinable
+    @inline(__always)
     func yield(_ nresults: Int32) -> ThreadStatus {
         return yieldk(nresults, 0, nil)
     }
@@ -864,7 +864,7 @@ public extension Lua {
      
      The parameter from represents the coroutine that is resuming L. If there is no such coroutine, this parameter can be NULL.
      */
-    @inlinable
+    @inline(__always)
     func resume(_ from: Lua?, _ narg: Int32, _ nres: inout Int32) -> ThreadStatus {
         let status = lua_resume(state, from?.state, narg, &nres)
         return ThreadStatus(rawValue: status)!
@@ -877,7 +877,7 @@ public extension Lua {
      
      You can call functions only in threads with status LUA_OK. You can resume threads with status LUA_OK (to start a new coroutine) or LUA_YIELD (to resume a coroutine).
      */
-    @inlinable
+    @inline(__always)
     var status: ThreadStatus {
         return ThreadStatus(rawValue: lua_status(state))!
     }
@@ -893,7 +893,7 @@ public extension Lua {
  */
 public extension Lua {
     /// Sets the warning function to be used by Lua to emit warnings (see lua_WarnFunction). The ud parameter sets the value ud passed to the warning function.
-    @inlinable
+    @inline(__always)
     func setWarnF(_ f: @escaping WarnFunction, _ ud: UnsafeMutableRawPointer?) {
         lua_setwarnf(state, f, ud)
     }
@@ -903,7 +903,7 @@ public extension Lua {
      
      See warn for more details about warnings.
      */
-    @inlinable
+    @inline(__always)
     func warning(_ msg: String, _ tocont: Bool) {
         msg.withCString { cString in
             lua_warning(state, cString, tocont ? 1 : 0)
@@ -944,7 +944,7 @@ public extension Lua {
  */
 public extension Lua {
     /// Raises a Lua error, using the value on the top of the stack as the error object. This function does a long jump, and therefore never returns (see luaL_error).
-    @inlinable
+    @inline(__always)
     func error() {
         _ = lua_error(state)
     }
@@ -968,7 +968,7 @@ public extension Lua {
      
      This function may raise an error if the given key is neither nil nor present in the table. See function next for the caveats of modifying the table during its traversal.
      */
-    @inlinable
+    @inline(__always)
     func next(at idx: Int32) -> Bool {
         return lua_next(state, idx) != 0
     }
@@ -976,13 +976,13 @@ public extension Lua {
     /**
      Concatenates the n values at the top of the stack, pops them, and leaves the result on the top. If n is 1, the result is the single value on the stack (that is, the function does nothing); if n is 0, the result is the empty string. Concatenation is performed following the usual semantics of Lua (see §3.4.6).
      */
-    @inlinable
+    @inline(__always)
     func concat(_ n: Int32) {
         lua_concat(state, n)
     }
     
     /// Returns the length of the value at the given index. It is equivalent to the '#' operator in Lua (see §3.4.7) and may trigger a metamethod for the "length" event (see §2.4). The result is pushed on the stack.
-    @inlinable
+    @inline(__always)
     func len(at idx: Int32) {
         lua_len(state, idx)
     }
@@ -990,7 +990,7 @@ public extension Lua {
     /**
      Converts the zero-terminated string s to a number, pushes that number into the stack, and returns the total size of the string, that is, its length plus one. The conversion can result in an integer or a float, according to the lexical conventions of Lua (see §3.1). The string may have leading and trailing whitespaces and a sign. If the string is not a valid numeral, returns 0 and pushes nothing. (Note that the result can be used as a boolean, true if the conversion succeeds.)
      */
-    @inlinable
+    @inline(__always)
     func stringToNumber(_ s: String) -> Bool {
         return s.withCString { cString in
             return lua_stringtonumber(state, cString) != 0
@@ -998,13 +998,13 @@ public extension Lua {
     }
     
     /// Returns the memory-allocation function of a given state. If ud is not NULL, Lua stores in *ud the opaque pointer given when the memory-allocator function was set.
-    @inlinable
+    @inline(__always)
     func getAllocF(_ ud: UnsafeMutablePointer<UnsafeMutableRawPointer?>? = nil) -> Alloc {
         return lua_getallocf(state, ud)
     }
     
     /// Changes the allocator function of a given state to f with user data ud.
-    @inlinable
+    @inline(__always)
     func setAllocF(_ f: @escaping Alloc, _ ud: UnsafeMutableRawPointer?) {
         lua_setallocf(state, f, ud)
     }
@@ -1016,7 +1016,7 @@ public extension Lua {
      
      Note that, both in case of errors and of a regular return, by the time the __close metamethod runs, the C stack was already unwound, so that any automatic C variable declared in the calling function (e.g., a buffer) will be out of scope.
      */
-    @inlinable
+    @inline(__always)
     func toClose(at idx: Int32) {
         lua_toclose(state, idx)
     }
@@ -1028,7 +1028,7 @@ public extension Lua {
      
      (Exceptionally, this function was introduced in release 5.4.3. It is not present in previous 5.4 releases.)
      */
-    @inlinable
+    @inline(__always)
     func closeSlot(at idx:Int32) {
         lua_closeslot(state, idx)
     }
@@ -1041,105 +1041,105 @@ public extension Lua {
  */
 public extension Lua {
     /// Pops n elements from the stack. It is implemented as a macro over lua_settop.
-    @inlinable
+    @inline(__always)
     func pop(_ n: Int32) {
         setTop(-n - 1)
     }
     
     /// Creates a new empty table and pushes it onto the stack. It is equivalent to lua_createtable(L, 0, 0).
-    @inlinable
+    @inline(__always)
     func newTable() {
         createTable(0, 0)
     }
     
     /// Sets the C function f as the new value of global name.
-    @inlinable
+    @inline(__always)
     func register(function fn: @escaping CFunction, named name: String) {
         pushCFunction(fn)
         setGloabal(named: name)
     }
     
     /// Pushes a C function onto the stack. This function is equivalent to lua_pushcclosure with no upvalues.
-    @inlinable
+    @inline(__always)
     func pushCFunction(_ fn: @escaping CFunction) {
         self.pushCClosure(fn, 0)
     }
     
     /// Returns 1 if the value at the given index is a function (either C or Lua), and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isFunction(at idx: Int32) -> Bool {
         return type(at: idx) == .function
     }
     
     /// Returns 1 if the value at the given index is a table, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isTable(at idx: Int32) -> Bool {
         return type(at: idx) == .table
     }
     
     /// Returns 1 if the value at the given index is a light userdata, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isLightUserData(at idx: Int32) -> Bool {
         return type(at: idx) == .lightUserData
     }
     
     /// Returns 1 if the value at the given index is nil, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isNil(at idx: Int32) -> Bool {
         return type(at: idx) == .nil
     }
     
     /// Returns 1 if the value at the given index is a boolean, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isBoolean(at idx: Int32) -> Bool {
         return type(at: idx) == .boolean
     }
     
     /// Returns 1 if the value at the given index is a thread, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isThread(at idx: Int32) -> Bool {
         return type(at: idx) == .thread
     }
     
     /// Returns 1 if the given index is not valid, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isNone(at idx: Int32) -> Bool {
         return type(at: idx) == .none
     }
     
     /// Returns 1 if the given index is not valid or if the value at this index is nil, and 0 otherwise.
-    @inlinable
+    @inline(__always)
     func isNoneOrNil(at idx: Int32) -> Bool {
         return type(at: idx).rawValue <= 0
     }
     
     /// This macro is equivalent to lua_pushstring, but should be used only when s is a literal string. (Lua may optimize this case.)
-    @inlinable
+    @inline(__always)
     func pushLiteral(_ s: String) {
         pushString(s)
     }
     
     /// Pushes the global environment onto the stack.
-    @inlinable
+    @inline(__always)
     func pushGlobalTable() {
         _ = rawGetI(at: Lua.registryIndex, number: Integer(Lua.ridxGlobals))
     }
     
     /// Moves the top element into the given valid index, shifting up the elements above this index to open space. This function cannot be called with a pseudo-index, because a pseudo-index is not an actual stack position.
-    @inlinable
+    @inline(__always)
     func insert(at idx: Int32) {
         rotate(idx: idx, by: 1)
     }
     
     /// Removes the element at the given valid index, shifting down the elements above this index to fill the gap. This function cannot be called with a pseudo-index, because a pseudo-index is not an actual stack position.
-    @inlinable
+    @inline(__always)
     func remove(at idx: Int32) {
         rotate(idx: idx, by: -1)
         pop(1)
     }
     
     /// Moves the top element into the given valid index without shifting any element (therefore replacing the value at that given index), and then pops the top element.
-    @inlinable
+    @inline(__always)
     func replace(at idx: Int32) {
         copy(from: -1, to: idx)
         pop(1)
@@ -1196,7 +1196,7 @@ public extension Lua {
      
      This function fills parts of a lua_Debug structure with an identification of the activation record of the function executing at a given level. Level 0 is the current running function, whereas level n+1 is the function that has called level n (except for tail calls, which do not count in the stack). When called with a level greater than the stack depth, lua_getstack returns 0; otherwise it returns 1.
      */
-    @inlinable
+    @inline(__always)
     func getStack(_ level: Int32, _ ar: inout lua_Debug) -> Bool {
         return lua_getstack(state, level, &ar) != 0
     }
@@ -1224,7 +1224,7 @@ public extension Lua {
      'L': pushes onto the stack a table whose indices are the lines on the function with some associated code, that is, the lines where you can put a break point. (Lines with no code include empty lines and comments.) If this option is given together with option 'f', its table is pushed after the function. This is the only option that can raise a memory error.
      This function returns 0 to signal an invalid option in what; even then the valid options are handled correctly.
      */
-    @inlinable
+    @inline(__always)
     func getInfo(_ what: String, _ ar: inout lua_Debug) -> Bool {
         return what.withCString { cString in
             return lua_getinfo(state, cString, &ar) != 0
@@ -1242,7 +1242,7 @@ public extension Lua {
      
      Returns NULL (and pushes nothing) when the index is greater than the number of active local variables.
      */
-    @inlinable
+    @inline(__always)
     func getLocal(_ ar: inout lua_Debug!, _ n: Int32) -> String? {
         guard let cString = lua_getlocal(state, &ar, n) else {return nil}
         return String(cString: cString)
@@ -1255,7 +1255,7 @@ public extension Lua {
      
      Parameters ar and n are as in the function lua_getlocal.
      */
-    @inlinable
+    @inline(__always)
     func setLocal(_ ar: inout lua_Debug!, _ n: Int32) -> String? {
         guard let cString = lua_setlocal(state, &ar, n) else {return nil}
         return String(cString: cString)
@@ -1266,7 +1266,7 @@ public extension Lua {
      
      See debug.getupvalue for more information about upvalues.
      */
-    @inlinable
+    @inline(__always)
     func getUpValue(_ funcindex: Int32, _ n: Int32) -> String? {
         guard let cString = lua_getupvalue(state, funcindex, n) else {return nil}
         return String(cString: cString)
@@ -1279,7 +1279,7 @@ public extension Lua {
      
      Parameters funcindex and n are as in the function lua_getupvalue.
      */
-    @inlinable
+    @inline(__always)
     func setUpValue(_ funcindex: Int32, _ n: Int32) -> String? {
         guard let cString = lua_setupvalue(state, funcindex, n) else {return nil}
         return String(cString: cString)
@@ -1292,13 +1292,13 @@ public extension Lua {
      
      Parameters funcindex and n are as in the function lua_getupvalue, but n cannot be greater than the number of upvalues.
      */
-    @inlinable
+    @inline(__always)
     func upValueID(_ fidx: Int32, _ n: Int32) -> UnsafeMutableRawPointer! {
         return lua_upvalueid(state, fidx, n)
     }
     
     /// Make the n1-th upvalue of the Lua closure at index funcindex1 refer to the n2-th upvalue of the Lua closure at index funcindex2.
-    @inlinable
+    @inline(__always)
     func upValueJoin(_ fidx1: Int32, _ n1: Int32, _ fidx2: Int32, _ n2: Int32) {
         lua_upvaluejoin(state, fidx1, n1, fidx2, n2)
     }
@@ -1314,31 +1314,31 @@ public extension Lua {
      The count hook: is called after the interpreter executes every count instructions. This event only happens while Lua is executing a Lua function.
      Hooks are disabled by setting mask to zero.
      */
-    @inlinable
+    @inline(__always)
     func setHook(_ f: @escaping Hook, _ mask: EventMask, _ count: Int32) {
         lua_sethook(state, f, mask.rawValue, count)
     }
     
     /// Returns the current hook function.
-    @inlinable
+    @inline(__always)
     func getHook() -> Hook? {
         return lua_gethook(state)
     }
     
     /// Returns the current hook mask.
-    @inlinable
+    @inline(__always)
     func getHookMask() -> EventMask {
         let mask = lua_gethookmask(state)
         return EventMask(rawValue: mask)
     }
     
     /// Returns the current hook count.
-    @inlinable
+    @inline(__always)
     func getHookCount() -> Int32 {
         return lua_gethookcount(state)
     }
     
-    @inlinable
+    @inline(__always)
     func setCStackLimit(_ limit: UInt32) -> Int32 {
         return lua_setcstacklimit(state, limit)
     }

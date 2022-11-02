@@ -1,4 +1,4 @@
-// swift-tools-version: 5.4.2
+// swift-tools-version: 5.6
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -9,22 +9,29 @@ libraryType = .dynamic
 #endif
 
 var cSettings: [CSetting] {
-    var array: [CSetting] = []
-    
-    array.append(.define("LUA_COMPAT_5_3"))
-    array.append(.define("LUA_USE_APICHECK", .when(configuration: .debug)))
-  
-    // Windows
-    array.append(.define("LUA_BUILD_AS_DLL", .when(platforms: [.windows])))
-
-    // Linux
-    array.append(.define("LUA_USE_LINUX", .when(platforms: [.linux])))
-    
-    // macOS
-    array.append(.define("LUA_USE_MACOSX", .when(platforms: [.macOS])))
-    array.append(.define("LUA_USE_READLINE", .when(platforms: [.macOS])))
-    
-    return array
+    return [
+        .define("LUA_USE_APICHECK", .when(configuration: .debug)),
+        
+        // Flags
+        //.unsafeFlags(["-Wall", "-fno-stack-protector", "-fno-common"]),
+        //.unsafeFlags(["-O2"], .when(configuration: .release)),
+        
+        // Windows
+        .define("LUA_BUILD_AS_DLL", .when(platforms: [.windows])),
+        
+        // Linux
+        .define("LUA_USE_LINUX", .when(platforms: [.linux])),
+        .define("LUA_USE_READLINE", .when(platforms: [.linux])),
+        
+        // macOS
+        .define("LUA_USE_MACOSX", .when(platforms: [.macOS])),
+        .define("LUA_USE_READLINE", .when(platforms: [.macOS])),
+        
+        // iOS
+        .define("LUA_USE_POSIX", .when(platforms: [.iOS, .tvOS, .macCatalyst])),
+        .define("LUA_USE_DLOPEN", .when(platforms: [.iOS, .tvOS, .macCatalyst])),
+        .define("LUA_USE_READLINE", .when(platforms: [.iOS, .tvOS, .macCatalyst])),
+    ]
 }
 
 var sources: [String] {
@@ -40,26 +47,23 @@ var sources: [String] {
 }
 
 var exclude: [String] {
-    var array: [String] = []
-    
     let files = ["Makefile", "lua.c", "luac.c"]
-    array.append(contentsOf: files.map({"src/" + $0}))
-
-    return array
+    return files.map({"src/" + $0})
 }
 
 let package = Package(
     name: "Lua",
     products: [
         .library(name: "Lua", type: libraryType, targets: ["Lua"]),
+        .library(name: "LuaC", type: libraryType, targets: ["LuaC"]),
     ],
     targets: [
-        .target(name: "Lua", dependencies: ["_LuaC"]),
-        .target(name: "_LuaC",
+        .target(name: "LuaC",
                 exclude: exclude,
                 sources: sources,
                 publicHeadersPath: "Include",
                 cSettings: cSettings),
+        .target(name: "Lua", dependencies: ["LuaC"]),
     ],
-    cLanguageStandard: .gnu99
+    cLanguageStandard: .c99
 )
