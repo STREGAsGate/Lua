@@ -51,6 +51,14 @@ var exclude: [String] {
     return files.map({"src/" + $0})
 }
 
+var cLanguageStandard: CLanguageStandard {
+    #if os(Windows)
+    return .c89
+    #else
+    return .c99
+    #endif
+}
+
 let package = Package(
     name: "Lua",
     products: [
@@ -65,5 +73,5 @@ let package = Package(
                 cSettings: cSettings),
         .target(name: "Lua", dependencies: ["LuaC"]),
     ],
-    cLanguageStandard: .c99
+    cLanguageStandard: cLanguageStandard
 )
