@@ -8,6 +8,10 @@
 #ifndef luaconf_h
 #define luaconf_h
 
+#if __APPLE__
+#include "TargetConditionals.h"
+#endif
+
 #include <limits.h>
 #include <stddef.h>
 
