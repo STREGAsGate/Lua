@@ -267,24 +267,17 @@ public extension Lua {
      */
     @inline(__always)
     func loadFileX(_ filename: String?, _ mode: String?) -> ThreadStatus {
-        var status: Int32 = 0
-        if let filename = filename, let mode = mode {
-            status = filename.withCString { filename in
-                return mode.withCString { mode in
-                    return luaL_loadfilex(state, filename, mode)
-                }
-            }
-        }else if filename == nil, let mode = mode {
-            status = mode.withCString { mode in
-                return luaL_loadfilex(state, nil, mode)
-            }
-        }else if let filename = filename, mode == nil {
-            status = filename.withCString { filename in
-                return luaL_loadfilex(state, filename, nil)
-            }
-        }else{
-            status = luaL_loadfilex(state, nil, nil)
-        }
+        let filename = filename?.utf8CString
+        let filenameP = filename?.withUnsafeBytes({ bufferP in
+            return bufferP.baseAddress
+        })
+        
+        let mode = mode?.utf8CString
+        let modeP = mode?.withUnsafeBytes({ bufferP in
+            return bufferP.baseAddress
+        })
+
+        let status = luaL_loadfilex(state, filenameP, modeP)
         return ThreadStatus(rawValue: status)!
     }
     
@@ -302,12 +295,12 @@ public extension Lua {
     @inline(__always)
     func loadBufferX(_ buff: String, _ sz: Int, _ name: String, _ mode: String?) -> ThreadStatus {
         let status: Int32 = buff.withCString { buff in
-            if let mode = mode {
-                return mode.withCString { mode in
-                    return luaL_loadbufferx(state, buff, sz, name, mode)
-                }
-            }
-            return luaL_loadbufferx(state, buff, sz, name, nil)
+            let mode = mode?.utf8CString
+            let modeP = mode?.withUnsafeBytes({ bufferP in
+                return bufferP.baseAddress
+            })
+
+            return luaL_loadbufferx(state, buff, sz, name, modeP)
         }
         return ThreadStatus(rawValue: status)!
     }
@@ -395,13 +388,11 @@ public extension Lua {
     /// Creates and pushes a traceback of the stack L1. If msg is not NULL, it is appended at the beginning of the traceback. The level parameter tells at which level to start the traceback.
     @inline(__always)
     func traceback(_ L1: OpaquePointer!, _ msg: String?, _ level: Int32) {
-        if let msg = msg {
-            msg.withCString { msg in
-                luaL_traceback(state, L1, msg, level)
-            }
-        }else{
-            luaL_traceback(state, L1, nil, level)
-        }
+        let msg = msg?.utf8CString
+        let msgP = msg?.withUnsafeBytes({ bufferP in
+            return bufferP.baseAddress
+        })
+        luaL_traceback(state, L1, msgP, level)
     }
 
     /**
