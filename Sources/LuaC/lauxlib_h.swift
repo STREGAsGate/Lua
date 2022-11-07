@@ -6,9 +6,9 @@
  * http://stregasgate.com
  */
 
-import LuaC
+import _LuaC
 
-public extension Lua {
+public extension LuaC {
     /// global table
     @inline(__always)
     static var gname: String {LUA_GNAME}
@@ -35,7 +35,7 @@ public extension Lua {
     /// Checks whether the code making the call and the Lua library being called are using the same version of Lua and the same numeric types.
     @inline(__always)
     func checkVersion() {
-        _checkVersion(Number(Lua.versionNum), Lua.numSizes)
+        _checkVersion(Number(LuaC.versionNum), LuaC.numSizes)
     }
 
     /// Pushes onto the stack the field e from the metatable of the object at index obj and returns the type of the pushed value. If the object does not have a metatable, or if the metatable does not have this field, pushes nothing and returns `LUA_TNIL`.
@@ -327,9 +327,9 @@ public extension Lua {
      Returns the new state, or NULL if there is a memory allocation error.
      */
     @inline(__always)
-    static func newState() -> Lua? {
+    static func newState() -> LuaC? {
         if let state = luaL_newstate() {
-            return Lua(managedState: state)
+            return LuaC(managedState: state)
         }
         return nil
     }
@@ -414,7 +414,7 @@ public extension Lua {
 ** some useful macros
 ** ===============================================================
 */
-public extension Lua {
+public extension LuaC {
     /**
      Creates a new table with a size optimized to store all entries in the array l (but does not actually store them). It is intended to be used in conjunction with luaL_setfuncs (see luaL_newlib).
 
@@ -501,7 +501,7 @@ public extension Lua {
     func doFile(_ fn: String?) -> ThreadStatus {
         let r = loadFile(fn)
         if r == .ok {
-            return pcall(0, Lua.multipleReturns, 0)
+            return pcall(0, LuaC.multipleReturns, 0)
         }
         return r
     }
@@ -516,7 +516,7 @@ public extension Lua {
     func doString(_ s: String) -> ThreadStatus {
         let r = loadString(s)
         if r == .ok {
-            return pcall(0, Lua.multipleReturns, 0)
+            return pcall(0, LuaC.multipleReturns, 0)
         }
         return r
     }
@@ -524,7 +524,7 @@ public extension Lua {
     /// Pushes onto the stack the metatable associated with name tname in the registry (see luaL_newmetatable).
     @inline(__always)
     func getMetaTable(_ n: String) {
-        _ = getField(at: Lua.registryIndex, n)
+        _ = getField(at: LuaC.registryIndex, n)
     }
     
     /**
@@ -563,7 +563,7 @@ public extension Lua {
 ** =======================================================
 */
 
-public extension Lua {
+public extension LuaC {
     typealias Buffer = luaL_Buffer
     
     /// Returns the length of the current content of buffer B (see luaL_Buffer).
@@ -677,7 +677,7 @@ public extension Lua {
 ** initial structure 'luaL_Stream' (it may contain other fields
 ** after that initial structure).
 */
-public extension Lua {
+public extension LuaC {
     @inline(__always)
     static var fileHandle: String {LUA_FILEHANDLE}
 }

@@ -6,9 +6,9 @@
  * http://stregasgate.com
  */
 
-import LuaC
+import _LuaC
 
-public extension Lua {
+public extension LuaC {
     @inline(__always)
     static var versionMajor: String {LUA_VERSION_MAJOR}
     @inline(__always)
@@ -22,7 +22,7 @@ public extension Lua {
     static var authors: String {LUA_AUTHORS}
 }
 
-public extension Lua {
+public extension LuaC {
     /// mark for precompiled code ('<esc>Lua')
     @inline(__always)
     static var signature: String {LUA_SIGNATURE}
@@ -37,20 +37,20 @@ public extension Lua {
  ** (-LUAI_MAXSTACK is the minimum valid index; we keep some free empty
  ** space after that to help overflow detection)
  */
-public extension Lua {
+public extension LuaC {
     @inline(__always)
     static let registryIndex: Int32 = -LUAI_MAXSTACK - 1000
     
     /// Returns the pseudo-index that represents the i-th upvalue of the running function (see §4.2). i must be in the range [1,256].
     @inline(__always)
     static func upValueIndex(_ i: Int32) -> Int32 {
-        return Lua.registryIndex - i
+        return LuaC.registryIndex - i
     }
 }
 
 /* thread status */
-public extension Lua {
-    enum ThreadStatus: Int32 {
+public extension LuaC {
+    enum ThreadStatus: Int32, Error {
         case ok = 0
         case yield
         case errRun
@@ -64,7 +64,7 @@ public extension Lua {
 /*
  ** basic types
  */
-public extension Lua {
+public extension LuaC {
     enum BasicType: Int32 {
         case none = -1
         case `nil`
@@ -80,7 +80,7 @@ public extension Lua {
     }
 }
 
-public extension Lua {
+public extension LuaC {
     /// minimum Lua stack available to a C function
     @inline(__always)
     static var mainStack: Int32 {LUA_MINSTACK}
@@ -94,7 +94,7 @@ public extension Lua {
     static var ridxLast: Int32 {LUA_RIDX_LAST}
 }
 
-public extension Lua {
+public extension LuaC {
     /// type of numbers in Lua
     typealias Number = Double
     
@@ -135,7 +135,7 @@ public extension Lua {
 /*
  ** state manipulation
  */
-public extension Lua {
+public extension LuaC {
     /**
      Close all active to-be-closed variables in the main thread, release all objects in the given Lua state (calling the corresponding garbage-collection metamethods, if any), and frees all dynamic memory used by this state.
      
@@ -152,9 +152,9 @@ public extension Lua {
      - note: Threads are subject to garbage collection, like any Lua object.
      */
     @inline(__always)
-    func newThread() -> Lua? {
+    func newThread() -> LuaC? {
         if let state = lua_newthread(state) {
-            return Lua(managedState: state)
+            return LuaC(managedState: state)
         }
         return nil
     }
@@ -183,7 +183,7 @@ public extension Lua {
 /*
  ** basic stack manipulation
  */
-public extension Lua {
+public extension LuaC {
     /// Converts the acceptable index idx into an equivalent absolute index (that is, one that does not depend on the stack size).
     @inline(__always)
     func absIndex(_ idx: Int32) -> Int32 {
@@ -240,7 +240,7 @@ public extension Lua {
      - note: This function pops n values from the stack from, and pushes them onto the stack to.
      */
     @inline(__always)
-    func xMove(from: Lua, to: Lua, count n: Int32) {
+    func xMove(from: LuaC, to: LuaC, count n: Int32) {
         lua_xmove(from.state, to.state, n)
     }
 }
@@ -248,7 +248,7 @@ public extension Lua {
 /*
  ** access functions (stack -> C)
  */
-public extension Lua {
+public extension LuaC {
     /// Returns 1 if the value at the given index is a number or a string convertible to a number, and 0 otherwise.
     @inline(__always)
     func isNumber(at idx: Int32) -> Bool {
@@ -298,7 +298,7 @@ public extension Lua {
     }
 }
 
-public extension Lua {
+public extension LuaC {
     /**
      Converts the Lua value at the given index to the C type lua_Number (see lua_Number). The Lua value must be a number or a string convertible to a number (see §3.4.3); otherwise, lua_tonumberx returns 0.
      
@@ -378,9 +378,9 @@ public extension Lua {
      Converts the value at the given index to a Lua thread (represented as lua_State*). This value must be a thread; otherwise, the function returns NULL.
      */
     @inline(__always)
-    func toThread(at idx: Int32) -> Lua? {
+    func toThread(at idx: Int32) -> LuaC? {
         guard let threadState = lua_tothread(state, idx) else {return nil}
-        return Lua(existingState: threadState)
+        return LuaC(existingState: threadState)
     }
     
     /**
@@ -397,7 +397,7 @@ public extension Lua {
 /*
  ** Comparison and arithmetic functions
  */
-public extension Lua {
+public extension LuaC {
     enum Operator: Int32 { /* ORDER TM, ORDER OP */
         /// LUA_OPADD: performs addition (+)
         case add = 0
@@ -464,7 +464,7 @@ public extension Lua {
 /*
  ** push functions (C -> stack)
  */
-public extension Lua {
+public extension LuaC {
     /// Pushes a nil value onto the stack.
     @inline(__always)
     func pushNil() {
@@ -529,7 +529,7 @@ public extension Lua {
     
     /// Pushes the thread represented by L onto the stack. Returns 1 if this thread is the main thread of its state.
     @inline(__always)
-    func pushThread(_ l: Lua) -> Bool {
+    func pushThread(_ l: LuaC) -> Bool {
         return lua_pushthread(l.state) != 0
     }
 }
@@ -537,7 +537,7 @@ public extension Lua {
 /*
  ** get functions (Lua -> stack)
  */
-public extension Lua {
+public extension LuaC {
     /// Pushes onto the stack the value of the global name. Returns the type of that value.
     @inline(__always) @discardableResult
     func getGlobal(named name: String) -> BasicType {
@@ -644,7 +644,7 @@ public extension Lua {
 /*
  ** set functions (stack -> Lua)
  */
-public extension Lua {
+public extension LuaC {
     /// Pops a value from the stack and sets it as the new value of global name.
     @inline(__always)
     func setGloabal(named name: String) {
@@ -732,7 +732,7 @@ public extension Lua {
 /*
  ** 'load' and 'call' functions (load and run Lua code)
  */
-public extension Lua {
+public extension LuaC {
     
     /// This function behaves exactly like lua_call, but allows the called function to yield (see §4.5).
     @inline(__always)
@@ -829,7 +829,7 @@ public extension Lua {
 /*
  ** coroutine functions
  */
-public extension Lua {
+public extension LuaC {
     /**
      Yields a coroutine (thread).
      
@@ -865,7 +865,7 @@ public extension Lua {
      The parameter from represents the coroutine that is resuming L. If there is no such coroutine, this parameter can be NULL.
      */
     @inline(__always)
-    func resume(_ from: Lua?, _ narg: Int32, _ nres: inout Int32) -> ThreadStatus {
+    func resume(_ from: LuaC?, _ narg: Int32, _ nres: inout Int32) -> ThreadStatus {
         let status = lua_resume(state, from?.state, narg, &nres)
         return ThreadStatus(rawValue: status)!
     }
@@ -891,7 +891,7 @@ public extension Lua {
 /*
  ** Warning-related functions
  */
-public extension Lua {
+public extension LuaC {
     /// Sets the warning function to be used by Lua to emit warnings (see lua_WarnFunction). The ud parameter sets the value ud passed to the warning function.
     @inline(__always)
     func setWarnF(_ f: @escaping WarnFunction, _ ud: UnsafeMutableRawPointer?) {
@@ -914,7 +914,7 @@ public extension Lua {
 /*
  ** garbage-collection function and options
  */
-public extension Lua {
+public extension LuaC {
     enum GarbageCollectionOption: Int32 {
         /// LUA_GCSTOP: Stops the garbage collector.
         case stop = 0
@@ -942,7 +942,7 @@ public extension Lua {
 /*
  ** miscellaneous functions
  */
-public extension Lua {
+public extension LuaC {
     /// Raises a Lua error, using the value on the top of the stack as the error object. This function does a long jump, and therefore never returns (see luaL_error).
     @inline(__always)
     func error() {
@@ -1039,7 +1039,7 @@ public extension Lua {
  ** some useful macros
  ** ===============================================================
  */
-public extension Lua {
+public extension LuaC {
     /// Pops n elements from the stack. It is implemented as a macro over lua_settop.
     @inline(__always)
     func pop(_ n: Int32) {
@@ -1122,7 +1122,7 @@ public extension Lua {
     /// Pushes the global environment onto the stack.
     @inline(__always)
     func pushGlobalTable() {
-        _ = rawGetI(at: Lua.registryIndex, number: Integer(Lua.ridxGlobals))
+        _ = rawGetI(at: LuaC.registryIndex, number: Integer(LuaC.ridxGlobals))
     }
     
     /// Moves the top element into the given valid index, shifting up the elements above this index to open space. This function cannot be called with a pseudo-index, because a pseudo-index is not an actual stack position.
@@ -1146,7 +1146,7 @@ public extension Lua {
     }
 }
 
-public extension Lua {
+public extension LuaC {
     @inline(__always)
     static var numTags: Int32 {BasicType.numTypes.rawValue}
 }
@@ -1159,7 +1159,7 @@ public extension Lua {
  ** Debug API
  ** =======================================================================
  */
-public extension Lua {
+public extension LuaC {
     /*
      ** Event codes
      */

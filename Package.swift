@@ -66,11 +66,12 @@ let package = Package(
         .library(name: "LuaC", type: libraryType, targets: ["LuaC"]),
     ],
     targets: [
-        .target(name: "LuaC",
+        .target(name: "_LuaC",
                 exclude: exclude,
                 sources: sources,
                 publicHeadersPath: "Include",
                 cSettings: cSettings),
+        .target(name: "LuaC", dependencies: ["_LuaC"]),
         .target(name: "Lua", dependencies: ["LuaC"]),
     ],
     cLanguageStandard: cLanguageStandard
