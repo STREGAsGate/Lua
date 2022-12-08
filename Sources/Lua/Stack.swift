@@ -1,11 +1,12 @@
-//
-//  File.swift
-//  
-//
-//  Created by Dustin Collins on 11/6/22.
-//
+/**
+ * Copyright © 2022 Dustin Collins (Strega's Gate)
+ * All Rights Reserved.
+ *
+ * http://stregasgate.com
+ */
 
 import LuaC
+import Foundation
 
 public extension Lua {
     typealias LuaType = LuaC.BasicType
@@ -67,6 +68,14 @@ public extension Lua {
      */
     func push(_ value: Bool) {
         return luaC.pushBoolean(value)
+    }
+    
+    /**
+     Places `value` on the top of the stack.
+     - parameter value: The value to add to the stack
+     */
+    func pushNil() {
+        return luaC.pushNil()
     }
     
     /**
@@ -162,11 +171,16 @@ public extension Lua {
     }
     
     func getFunction(at index: Int) -> FunctionReference? {
-        copy(from: index, to: 1)
-        if typeOfValue(at: 1) != .function {
+        // add garbage data
+        pushNil()
+        // Replace garbage with func
+        copy(from: index, to: self.top)
+        if typeOfValue(at: self.top) != .function {
+            // Remove the added entry
             pop()
             return nil
         }
+        // Pop func and create reference
         let reference = luaC.ref(LuaC.registryIndex)
         return FunctionReference(lua: self, reference: reference)
     }
@@ -188,6 +202,97 @@ public extension Lua {
             self.lua = lua
             self.tableIndex = tableIndex
         }
+        
+        /// The number of elements in the table
+        public var count: Int {
+            return Int(lua.luaC.rawLen(at: tableIndex))
+        }
+        
+        /// Returns all values representable by (Bool, Double, or String) in the table.
+        var values: [LuaValueType] {
+            var array: [LuaValueType] = []
+            for index in 1...count {
+                let type = lua.luaC.rawGetI(at: -1, number: Lua.Integer(index))
+                var value: LuaValueType? = nil
+                switch type {
+                case .boolean:
+                    value = lua.luaC.toBoolean(at: -1)
+                case .number:
+                    value = lua.luaC.toNumber(at: -1)
+                case .string:
+                    value = lua.luaC.toString(at: -1)
+                case .table, .userData, .lightUserData:
+                    break
+                case .thread, .function:
+                    break
+                case .none, .nil, .numTypes:
+                    break
+                }
+                if let value = value {
+                    array.append(value)
+                }
+                lua.pop(1)
+            }
+            return array
+        }
+        
+        @inline(__always)
+        private var valuesAsStrings: [String] {
+            var array: [String] = []
+            for index in 1...Lua.Integer(count) {
+                lua.luaC.rawGetI(at: -1, number: index)
+                if let value = lua.luaC.toString(at: -1) {
+                    array.append(value)
+                }
+                lua.pop()
+            }
+            return array
+        }
+        
+        @inline(__always)
+        private var valuesAsNumbers: [Lua.Number] {
+            var array: [Lua.Number] = []
+            for index in 1...Lua.Integer(count) {
+                lua.luaC.rawGetI(at: -1, number: index)
+                if let value = lua.luaC.toNumber(at: -1) {
+                    array.append(value)
+                }
+                lua.pop()
+            }
+            return array
+        }
+        
+        @inline(__always)
+        private var valuesAsBooleans: [Bool] {
+            var array: [Bool] = []
+            for index in 1...Lua.Integer(count) {
+                lua.luaC.rawGetI(at: -1, number: index)
+                let value = lua.luaC.toBoolean(at: -1)
+                array.append(value)
+                
+                lua.pop()
+            }
+            return array
+        }
+        
+        public func values<T:LuaNonNumericValueType>(as type: T.Type) -> [T] {
+            switch type {
+            case _ as String.Type:
+                return valuesAsStrings as! [T]
+            case _ as Bool.Type:
+                return valuesAsBooleans as! [T]
+            default:
+                fatalError("Type \(type) not implimented.")
+            }
+        }
+        
+        public func values<T:BinaryInteger & FixedWidthInteger>(as type: T.Type) -> [T] {
+            return valuesAsStrings.compactMap { T($0) }
+        }
+        
+        public func values<T:BinaryFloatingPoint>(as type: T.Type) -> [T] {
+            return valuesAsNumbers.map({T($0)}) as! [T]
+        }
     }
     
     /**
@@ -195,16 +300,10 @@ public extension Lua {
      - parameter index: The stack position of the desired value.
      - parameter tableAccess: A closure that provides access to the table. The table is only valid within this block. The table may become invalid if the stack is manipulated, such as it's index is popped.
      */
-    func getTable<ReturnValue>(at tableIndex: Int, tableAccess: (_ table: Table?) -> ReturnValue) -> ReturnValue {
-        let returnValue: ReturnValue
-        if typeOfValue(at: tableIndex) == .table {
-            let table = Table(lua: self, tableIndex: Int32(tableIndex))
-            returnValue = tableAccess(table)
-        }else{
-            returnValue = tableAccess(nil)
-        }
-        pop()
-        return returnValue
+    func getTable<ReturnValue>(at tableIndex: Int, tableAccess: (_ table: Table) -> ReturnValue) -> ReturnValue {
+        assert(typeOfValue(at: tableIndex) == .table)
+        let table = Table(lua: self, tableIndex: Int32(tableIndex))
+        return tableAccess(table)
     }
 }
 
@@ -215,7 +314,7 @@ public extension Lua.Table {
      - note Does not pop the value off of the stack.
      */
     func getString(forKey key: String) -> String? {
-        assert(self.isValid, "A `Table` is no longer located at stack index \(tableIndex)")
+        assert(self.isValid, "A table is no longer located at stack index \(tableIndex).")
         guard lua.luaC.getField(at: tableIndex, key) == .string else {return nil}
         let value = lua.luaC.toString(at: -1)
         lua.pop()
@@ -228,7 +327,7 @@ public extension Lua.Table {
      - note Does not pop the value off of the stack.
      */
     func getDouble(forKey key: String) -> Double? {
-        assert(self.isValid, "A `Table` is no longer located at stack index \(tableIndex)")
+        assert(self.isValid, "A table is no longer located at stack index \(tableIndex).")
         guard lua.luaC.getField(at: tableIndex, key) == .number else {return nil}
         let value = lua.luaC.toNumber(at: -1)
         lua.pop()
@@ -244,7 +343,7 @@ public extension Lua.Table {
      - note Does not pop the value off of the stack.
      */
     func getFloat(forKey key: String) -> Float? {
-        assert(self.isValid, "A `Table` is no longer located at stack index \(tableIndex)")
+        assert(self.isValid, "A table is no longer located at stack index \(tableIndex).")
         guard lua.luaC.getField(at: tableIndex, key) == .number else {return nil}
         let value = lua.luaC.toNumber(at: -1)
         lua.pop()
@@ -259,7 +358,7 @@ public extension Lua.Table {
      - parameter key: The table name of the desired value.
      */
     func getInt(forKey key: String) -> Int? {
-        assert(self.isValid, "A `Table` is no longer located at stack index \(tableIndex)")
+        assert(self.isValid, "A table is no longer located at stack index \(tableIndex).")
         guard lua.luaC.getField(at: tableIndex, key) == .number else {return nil}
         let value = lua.luaC.toInteger(at: -1)
         lua.pop()
@@ -275,7 +374,7 @@ public extension Lua.Table {
      - note: Does not pop the value off of the stack.
      */
     func getBool(forKey key: String) -> Bool {
-        assert(self.isValid, "A `Table` is no longer located at stack index \(tableIndex)")
+        assert(self.isValid, "A table is no longer located at stack index \(tableIndex).")
         guard lua.luaC.getField(at: tableIndex, key) == .boolean else {return false}
         let value = lua.luaC.toBoolean(at: -1)
         lua.pop()
@@ -287,17 +386,19 @@ public extension Lua.Table {
      - parameter index The stack position of the desired value.
      - note Pushes a value onto the stack. You must pop the value when you are done with the table.
      */
-    func getTable<ReturnValue>(forKey key: String, block: (_ table: Self?) -> ReturnValue) -> ReturnValue {
-        assert(self.isValid, "A `Table` is no longer located at stack index \(tableIndex)")
-        let returnValue: ReturnValue
-        if lua.luaC.getField(at: tableIndex, key) == .table {
-            let table = Self(lua: lua, tableIndex: -1)
-            returnValue = block(table)
+    func getTable<ReturnValue>(forKey key: String, block: (_ table: Lua.Table) -> ReturnValue) -> ReturnValue? {
+        assert(self.isValid, "A table is no longer located at stack index \(tableIndex).")
+        let type = lua.luaC.getField(at: tableIndex, key)
+        if type == .table {
+            assert(type == .table)
+            let table = Self(lua: lua, tableIndex: Int32(lua.top))
+            let value = block(table)
+            lua.pop()
+            return value
         }else{
-            returnValue = block(nil)
+            lua.pop()
+            return nil
         }
-        lua.pop()
-        return returnValue
     }
     
     func getFunction(forKey key: String) -> Lua.FunctionReference? {
