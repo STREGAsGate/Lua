@@ -18,6 +18,9 @@ var cSettings: [CSetting] {
         
         // Windows
         .define("LUA_BUILD_AS_DLL", .when(platforms: [.windows])),
+        .define("_CRT_SECURE_NO_WARNINGS", .when(platforms: [.windows])), // Silence warnings
+        .define("_CINDEX_LIB_", .when(platforms: [.windows])),
+//        .unsafeFlags(["-Od"], .when(platforms: [.windows])),
         
         // Linux
         .define("LUA_USE_LINUX", .when(platforms: [.linux])),
